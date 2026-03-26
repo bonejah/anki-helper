@@ -55,6 +55,7 @@ SHORT_TEXT_HINTS = {
     "merci": "fr",
     "au revoir": "fr",
     "devoir": "fr",
+    "pouvoir": "fr",
     "hello": "en",
     "hi": "en",
     "thanks": "en",
@@ -116,6 +117,24 @@ def invoke_anki(action, params=None):
     response = requests.post(ANKI_CONNECT_URL, json=payload, timeout=10)
     return response.json()
 
+def is_valid_french_word(word):
+    try:
+        url = f"https://www.larousse.fr/dictionnaires/francais/{quote(word)}"
+        response = requests.get(url, timeout=5)
+
+        if response.status_code != 200:
+            return False
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Se encontrou definição → é francês
+        definition = soup.find("article", class_="BlocDefinition")
+
+        return definition is not None
+
+    except Exception:
+        return False
+
 
 def detect_language_safely(text: str):
     text = normalize_text(text)
@@ -144,7 +163,13 @@ def detect_language_safely(text: str):
                 print(f"Idioma suportado com baixa confiança: {candidate.lang}")
                 return candidate.lang
 
-        print("Idioma detectado fora dos suportados.")
+        # 🚨 NOVO: fallback inteligente
+        print("Tentando fallback para francês...")
+
+        if is_valid_french_word(text):
+            print("Detectado como francês via Larousse fallback")
+            return "fr"
+        
         return None
 
     except LangDetectException:
@@ -374,50 +399,76 @@ def build_explanation_html_for_anki(explanation_data):
     html_parts = []
 
     if definitions:
-        html_parts.append("<div><b>Definitions</b></div>")
-        html_parts.append("<br>")
+        html_parts.append(
+            f"""
+            <div style="font-size:18px; font-weight:700; margin-bottom:12px; color:#1f2937;">
+                {_('Definitions:')}
+            </div>
+            """
+        )
 
         for item in definitions:
             number = f"{item['number']}. " if item.get("number") else ""
-            html_parts.append(f"<div><b>{number}</b>{item['text']}</div>")
+
+            html_parts.append(
+                f"""
+                <div style="margin-bottom:16px; padding:14px; border:1px solid #e5e7eb; border-radius:12px; background:#ffffff;">
+                    <div style="font-size:15px; line-height:1.6; color:#1f2937;">
+                        <strong>{number}</strong>{item['text']}
+                    </div>
+                """
+            )
 
             if item.get("examples"):
                 examples_html = "".join(
-                    [f"<li>{ex}</li>" for ex in item["examples"]]
+                    [f"<li style='margin-bottom:6px;'>{ex}</li>" for ex in item["examples"]]
                 )
-                html_parts.append(f"""
-                    <div style="margin-top:6px;">
-                        <b>Examples:</b>
-                        <ul style="margin-top:4px;">{examples_html}</ul>
+                html_parts.append(
+                    f"""
+                    <div style="margin-top:10px;">
+                        <div style="font-weight:700; color:#374151; margin-bottom:6px;">{_('Examples')}</div>
+                        <ul style="margin:0; padding-left:18px; color:#4b5563;">
+                            {examples_html}
+                        </ul>
                     </div>
-                """)
+                    """
+                )
 
             if item.get("synonyms"):
                 synonyms = ", ".join(item["synonyms"])
-                html_parts.append(f"""
-                    <div style="margin-top:6px;">
-                        <b>Synonyms:</b> {synonyms}
+                html_parts.append(
+                    f"""
+                    <div style="margin-top:10px; color:#4b5563;">
+                        <strong>{_('Synonyms')}:</strong> {synonyms}
                     </div>
-                """)
+                    """
+                )
 
-            html_parts.append("<br>")
+            html_parts.append("</div>")
 
     if locutions:
-        html_parts.append("<div style='margin-top:12px;'><b>Expressions / Locutions</b></div>")
-        html_parts.append("<br>")
+        html_parts.append(
+            f"""
+            <div style="font-size:18px; font-weight:700; margin:20px 0 12px; color:#1f2937;">
+                {_('Expressions / Locutions')}
+            </div>
+            """
+        )
 
         for loc in locutions:
-            html_parts.append(f"""
-                <div style="margin-bottom:10px;">
-                    <b>{loc['title']}</b><br>
-                    {loc['text']}
+            html_parts.append(
+                f"""
+                <div style="margin-bottom:12px; padding:14px; border:1px solid #e5e7eb; border-radius:12px; background:#ffffff;">
+                    <div style="font-weight:700; color:#2563eb; margin-bottom:6px;">{loc['title']}</div>
+                    <div style="color:#374151; line-height:1.6;">{loc['text']}</div>
                 </div>
-            """)
+                """
+            )
 
     if not html_parts and fallback_text:
-        return f"<div>{fallback_text}</div>"
+        return f"<div style='color:#374151; line-height:1.6;'>{fallback_text}</div>"
 
-    return "".join(html_parts) or "<div>Definition not found.</div>"
+    return "".join(html_parts) or f"<div>{_('Definition not found.')}</div>"
 
 
 def translate_text(text, src_lang):
@@ -438,32 +489,76 @@ def translate_text(text, src_lang):
     return translations
 
 
-def create_anki_card(text, translation_data, deck_name, detected_lang, explanation_html_for_anki, audio_tag_for_anki=""):
+def create_anki_card(
+    text,
+    translation_data,
+    deck_name,
+    detected_lang,
+    explanation_html_for_anki,
+    audio_tag_for_anki=""
+):
     translations_html = "".join([
         f"""
-        <div style="margin-bottom:10px; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
-            <b>{item['label']}:</b><br>
-            {item['text']}
+        <div style="
+            margin-bottom:10px;
+            padding:12px;
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            background:#ffffff;
+        ">
+            <div style="font-size:13px; font-weight:700; color:#6b7280; text-transform:uppercase; margin-bottom:4px;">
+                {item['label']}
+            </div>
+            <div style="font-size:16px; color:#1f2937;">
+                {item['text']}
+            </div>
         </div>
         """
         for item in translation_data["translations"]
     ])
 
     back_html = f"""
-    <div style="font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; text-align: left;">
-        <div style="margin-bottom:12px;">
-            <b>Detected language:</b> {SUPPORTED_LANGS[detected_lang]['label']}
+    <div style="
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        text-align: left;
+        color: #1f2937;
+        padding: 6px;
+    ">
+        <div style="
+            margin-bottom:16px;
+            padding:12px 14px;
+            border-radius:12px;
+            background:#eef2ff;
+            border:1px solid #c7d2fe;
+        ">
+            <strong>{_('Detected language')}:</strong> {SUPPORTED_LANGS[detected_lang]['label']}
         </div>
 
-        <div style="margin-bottom:16px;">
+        <div style="margin-bottom:18px;">
             {translations_html}
         </div>
 
-        <div style="margin-bottom:16px;">
-            {audio_tag_for_anki}
+        {f'''
+        <div style="
+            margin-bottom:18px;
+            padding:12px 14px;
+            border-radius:12px;
+            background:#f8fafc;
+            border:1px solid #e5e7eb;
+        ">
+            <div style="font-weight:700; margin-bottom:8px;">🔊 Audio</div>
+            <div>{audio_tag_for_anki}</div>
         </div>
+        ''' if audio_tag_for_anki else ''}
 
-        <div style="padding:14px; border:1px solid #e5e7eb; border-radius:12px; background:#fafafa;">
+        <div style="
+            padding:16px;
+            border:1px solid #e5e7eb;
+            border-radius:14px;
+            background:#fafafa;
+        ">
             {explanation_html_for_anki}
         </div>
     </div>
@@ -483,27 +578,27 @@ def create_anki_card(text, translation_data, deck_name, detected_lang, explanati
 
     try:
         if note_exists_in_deck(text, deck_name):
-            message = f"Este card já existe no deck {deck_name}."
+            message = _("This card already exists in the %(deck)s deck.", deck=deck_name)
             print(message)
             return False, message
 
         result = invoke_anki("addNote", payload)
 
         if result.get("error"):
-            error_msg = f"Erro ao criar card: {result['error']}"
+            error_msg = _("Error creating card: %(error)s", error=result["error"])
             print(error_msg)
             return False, error_msg
 
-        success_msg = f"Card criado com sucesso no deck {deck_name}."
+        success_msg = _("Card created successfully in the %(deck)s deck.", deck=deck_name)
         print(success_msg, "ID:", result.get("result"))
         return True, success_msg
 
     except requests.exceptions.ConnectionError:
-        error_msg = "Erro: Anki não está aberto ou AnkiConnect não está rodando."
+        error_msg = _("Error: Anki is not open or AnkiConnect is not running.")
         print(error_msg)
         return False, error_msg
     except Exception as e:
-        error_msg = f"Erro inesperado ao criar card: {e}"
+        error_msg = _("Unexpected error creating card: %(error)s", error=e)
         print(error_msg)
         return False, error_msg
 
@@ -563,7 +658,7 @@ def home():
         explanation_data = get_explanation_by_language(text, detected_lang)
         audio_file = explanation_data.get("audio_filename")
         audio_file_safe = send_audio_to_anki(audio_file)
-        audio_tag_for_anki = f"[sound:{audio_file_safe}]\n" if audio_file_safe else ""
+        audio_tag_for_anki = f"[sound:{audio_file_safe}]" if audio_file_safe else ""
 
         try:
             translations = translate_text(text, detected_lang)
@@ -572,7 +667,7 @@ def home():
             translation_data = {
                 "translations": translations,
                 "detected_language": SUPPORTED_LANGS[detected_lang]["label"],
-                "explanation_data": explanation_html_for_anki,
+                "explanation_data": explanation_data,
             }
 
             if deck_ok:
@@ -581,7 +676,7 @@ def home():
                     translation_data=translation_data,
                     deck_name=selected_deck,
                     detected_lang=detected_lang,
-                    explanation_text_for_anki=explanation_html_for_anki,
+                    explanation_html_for_anki=explanation_html_for_anki,
                     audio_tag_for_anki=audio_tag_for_anki,
                 )
 
@@ -641,4 +736,3 @@ def create_deck():
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
-    
