@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tradutor e Anki Helper</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <p>Traduzindo e salvando no Anki...</p>
+    </div>
+  </div>
+
+  <main class="container">
+    {% if translation_data.saved_message %}
+    <div class="status-message success">
+      {{ translation_data.saved_message }}
+    </div>
+    {% endif %}
+
+    {% if translation_data.error_message %}
+    <div class="status-message error">
+      {{ translation_data.error_message }}
+    </div>
+    {% endif %}
+
+    <section class="hero">
+      <div class="hero-card">
+        <span class="eyebrow">🌍 Tradutor trilíngue + Anki</span>
+        <h1>Transforme palavras em aprendizado</h1>
+        <p class="subtitle">
+          Traduza palavras e expressões entre <strong>French, English e Portuguese</strong>,
+          salve no Anki e revise depois.
+        </p>
+      </div>
+
+      <aside class="side-card">
+        <h2>Idiomas suportados</h2>
+        <ul class="tips">
+          <li>French → English + Portuguese</li>
+          <li>English → French + Portuguese</li>
+          <li>Portuguese → English + French</li>
+          <li>Outros idiomas não são suportados no momento</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Criar deck</h2>
+        <p class="panel-description">
+          Crie decks personalizados para organizar seus cartões.
+        </p>
+
+        <form method="POST" action="/create_deck">
+          <div class="field">
+            <label for="new_deck">Nome do deck</label>
+            <input id="new_deck" type="text" name="new_deck" placeholder="Ex.: French::Travel" />
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-success">Criar deck</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2>Traduzir</h2>
+        <p class="panel-description">
+          Escolha um deck manualmente ou use <strong>Auto Detect</strong>.
+        </p>
+
+        <form method="POST" id="translateForm">
+          <div class="field">
+            <label for="deck">Deck</label>
+            <select id="deck" name="deck">
+              {% for deck in decks %}
+              <option value="{{ deck }}" {% if deck==selected_deck %}selected{% endif %}>
+                {{ deck }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="text">Texto</label>
+            <textarea id="text" name="text"
+              placeholder="Digite uma palavra, expressão ou frase em French, English ou Portuguese...">{{ original_text
+              }}</textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary">Traduzir</button>
+            <button type="button" class="btn-secondary" onclick="clearAll()">Limpar</button>
+          </div>
+
+          <p class="helper-text">
+            Este app funciona apenas com <strong>French, English e Portuguese</strong>.
+            Se outro idioma for digitado, o sistema exibirá um aviso.
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <section class="result-wrapper">
+      {% if translation_data and (translation_data.translations or translation_data.explanation_data or
+      translation_data.detected_language) %}
+      <h2 class="result-title">Resultado</h2>
+
+      <div class="meta-info">
+        {% if translation_data.detected_language %}
+        <div class="meta-badge">
+          <span class="meta-label">Idioma detectado</span>
+          <span class="meta-value">{{ translation_data.detected_language }}</span>
+        </div>
+        {% endif %}
+
+        {% if selected_deck and selected_deck != "Auto Detect" %}
+        <div class="meta-badge">
+          <span class="meta-label">Deck usado</span>
+          <span class="meta-value">{{ selected_deck }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if translation_data.translations %}
+      <div class="result-grid translation-result">
+        {% for item in translation_data.translations %}
+        <div class="result-card">
+          <h3>{{ item.label }}</h3>
+          <p>{{ item.text }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="explanation translation-result">
+        <h3>Explicação e exemplos</h3>
+
+        {% if translation_data.detected_language == "French"
+        and translation_data.explanation_data
+        and translation_data.explanation_data.definitions %}
+
+        <div class="definition-list">
+          {% for item in translation_data.explanation_data.definitions %}
+          <div class="definition-item">
+            <div class="definition-header">
+              {% if item.number %}
+              <span class="definition-number">{{ item.number }}</span>
+              {% endif %}
+              <p class="definition-text">{{ item.text }}</p>
+            </div>
+
+            {% if item.examples %}
+            <div class="definition-subblock">
+              <span class="sub-label">Exemplos</span>
+              <ul>
+                {% for ex in item.examples %}
+                <li>{{ ex }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            {% if item.synonyms %}
+            <div class="definition-subblock">
+              <span class="sub-label">Sinônimos</span>
+              <p>{{ item.synonyms | join(', ') }}</p>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if translation_data.explanation_data.locutions %}
+        <div class="locutions-block">
+          <h4>Expressões / Locuções</h4>
+          {% for loc in translation_data.explanation_data.locutions %}
+          <div class="locution-item">
+            <strong>{{ loc.title }}</strong>
+            <p>{{ loc.text }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% elif translation_data.explanation_data and translation_data.explanation_data.fallback_text %}
+        <p>{{ translation_data.explanation_data.fallback_text }}</p>
+
+        {% else %}
+        <p>Definição não encontrada.</p>
+        {% endif %}
+      </div>
+
+      {% else %}
+      <div class="empty-state" id="emptyState">
+        Ainda não há tradução exibida. Digite um texto para começar.
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script>
+    function clearAll() {
+      const textArea = document.getElementById('text');
+      if (textArea) {
+        textArea.value = '';
+      }
+
+      const translationElements = document.querySelectorAll(
+        '.translation-result, .meta-info, .status-message, .result-title'
+      );
+      translationElements.forEach((el) => el.remove());
+
+      const resultWrapper = document.querySelector('.result-wrapper');
+      const existingEmptyState = document.getElementById('emptyState');
+
+      if (!existingEmptyState && resultWrapper) {
+        const emptyState = document.createElement('div');
+        emptyState.id = 'emptyState';
+        emptyState.className = 'empty-state';
+        emptyState.textContent = 'Ainda não há tradução exibida. Digite um texto para começar.';
+        resultWrapper.appendChild(emptyState);
+      }
+    }
+
+    function showLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.classList.remove('hidden');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('translateForm');
+
+      if (form) {
+        form.addEventListener('submit', function () {
+          showLoading();
+
+          const submitButton = form.querySelector('.btn-primary');
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Traduzindo...';
+          }
+        });
+      }
+
+      setTimeout(() => {
+        const alerts = document.querySelectorAll('.status-message');
+        alerts.forEach(alert => {
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateY(-10px)';
+          setTimeout(() => alert.remove(), 300);
+        });
+      }, 3000);
+    });
+  </script>
+</body>
+
+</html>
