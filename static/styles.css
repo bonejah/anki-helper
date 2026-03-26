@@ -621,6 +621,28 @@ button {
   box-shadow: 0 12px 32px var(--primary-glow);
 }
 
+/* Footer */
+.footer {
+  margin-top: 80px;
+  padding: 40px 0 0;
+  border-top: 1px solid var(--glass-border);
+  text-align: center;
+}
+
+.footer-content {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.footer-content p {
+  margin: 5px 0;
+}
+
+.footer-tagline {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
 @media (max-width: 900px) {
   .content-grid {
     grid-template-columns: 1fr;

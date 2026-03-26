@@ -19,6 +19,7 @@ from core.formatter import build_explanation_html_for_anki
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-in-production")
+APP_VERSION = "1.2.0"
 
 # ===============================
 # I18N
@@ -43,6 +44,7 @@ def inject_globals():
     return {
         "ui_languages": LANGUAGES,
         "current_ui_lang": get_locale(),
+        "app_version": APP_VERSION,
     }
 
 # ===============================
