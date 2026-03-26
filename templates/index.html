@@ -12,7 +12,10 @@
 
   <div id="loadingOverlay" class="loading-overlay hidden">
     <div class="loading-box">
-      <div class="spinner"></div>
+      <div class="spinner-wrapper">
+        <div class="spinner"></div>
+        <div class="spinner-inner"></div>
+      </div>
       <p>{{ _('Translating and saving to Anki...') }}</p>
     </div>
   </div>
@@ -22,38 +25,35 @@
       <a href="{{ url_for('set_language', lang_code='pt') }}"
         class="ui-lang-link {% if current_ui_lang == 'pt' %}active{% endif %}" aria-label="Português">
         <span class="flag">🇧🇷</span>
-        <span class="lang-code">PT</span>
         <span class="lang-label">Português</span>
       </a>
 
       <a href="{{ url_for('set_language', lang_code='en') }}"
         class="ui-lang-link {% if current_ui_lang == 'en' %}active{% endif %}" aria-label="English">
         <span class="flag">🇺🇸</span>
-        <span class="lang-code">EN</span>
         <span class="lang-label">English</span>
       </a>
 
       <a href="{{ url_for('set_language', lang_code='fr') }}"
         class="ui-lang-link {% if current_ui_lang == 'fr' %}active{% endif %}" aria-label="Français">
         <span class="flag">🇫🇷</span>
-        <span class="lang-code">FR</span>
         <span class="lang-label">Français</span>
       </a>
     </div>
 
     {% if translation_data.saved_message %}
     <div class="status-message success">
-      {{ translation_data.saved_message }}
+      <span>✅</span> {{ translation_data.saved_message }}
     </div>
     {% endif %}
 
     {% if translation_data.error_message %}
     <div class="status-message error">
-      {{ translation_data.error_message }}
+      <span>❌</span> {{ translation_data.error_message }}
     </div>
     {% endif %}
 
-    <section class="hero hero-full">
+    <header class="hero">
       <div class="hero-card">
         <span class="eyebrow">🌍 {{ _('Trilingual translator 🇧🇷 🇺🇸 🇫🇷 + Anki') }}</span>
         <h1>{{ _('Turn words into learning') }}</h1>
@@ -62,7 +62,7 @@
           later.') }}
         </p>
       </div>
-    </section>
+    </header>
 
     <section class="content-grid">
       <div class="left-column">
@@ -72,7 +72,6 @@
             <li>{{ _('French → English + Portuguese') }}</li>
             <li>{{ _('English → French + Portuguese') }}</li>
             <li>{{ _('Portuguese → English + French') }}</li>
-            <li>{{ _('Other languages are not supported at the moment') }}</li>
           </ul>
         </aside>
 
@@ -88,9 +87,9 @@
               <input id="new_deck" type="text" name="new_deck" placeholder="{{ _('Example: French::Travel') }}" />
             </div>
 
-            <div class="actions">
-              <button type="submit" class="btn-success">{{ _('Create deck') }}</button>
-            </div>
+            <button type="submit" class="btn-success">
+              <span>➕</span> {{ _('Create deck') }}
+            </button>
           </form>
         </div>
       </div>
@@ -116,34 +115,37 @@
 
             <div class="field">
               <label for="text">{{ _('Text') }}</label>
-              <textarea id="text" name="text"
-                placeholder="{{ _('Type a word, expression or sentence in French, English or Portuguese...') }}">{{
-                original_text }}</textarea>
+              <textarea id="text" name="text" required
+                placeholder="{{ _('Type a word, expression or sentence in French, English or Portuguese...') }}">{{ original_text }}</textarea>
             </div>
 
             <div class="actions">
-              <button type="submit" class="btn-primary">{{ _('Translate') }}</button>
-              <button type="button" class="btn-secondary" onclick="clearAll()">{{ _('Clear') }}</button>
+              <button type="submit" class="btn-primary">
+                <span>✨</span> {{ _('Translate') }}
+              </button>
+              <button type="button" class="btn-secondary" onclick="clearAll()">
+                <span>🧹</span> {{ _('Clear') }}
+              </button>
             </div>
 
             <p class="helper-text">
-              {{ _('This app only works with French, English and Portuguese. If another language is entered, the system
-              will show a warning.') }}
+              {{ _('This app only works with French, English and Portuguese.') }}
             </p>
           </form>
         </div>
       </div>
     </section>
 
-    <section class="result-wrapper">
-      {% if translation_data and (translation_data.translations or translation_data.explanation_data or
-      translation_data.detected_language) %}
-      <h2 class="result-title">{{ _('Result') }}</h2>
+    {% if translation_data and (translation_data.translations or translation_data.explanation_data or
+    translation_data.detected_language) %}
+    <section class="result-wrapper animate-slide-up">
+      <h2 class="result-title">🚀 {{ _('Result') }}</h2>
 
-      <div class="meta-info">
+      <div class="meta-info animate-slide-up delay-1">
         {% if translation_data.detected_language %}
         <div class="meta-badge">
           <span class="meta-label">{{ _('Detected language') }}</span>
+          <br>
           <span class="meta-value">{{ translation_data.detected_language }}</span>
         </div>
         {% endif %}
@@ -151,13 +153,14 @@
         {% if selected_deck and selected_deck != "Auto Detect" %}
         <div class="meta-badge">
           <span class="meta-label">{{ _('Deck used') }}</span>
+          <br>
           <span class="meta-value">{{ selected_deck }}</span>
         </div>
         {% endif %}
       </div>
 
       {% if translation_data.translations %}
-      <div class="result-grid translation-result">
+      <div class="result-grid animate-slide-up delay-2">
         {% for item in translation_data.translations %}
         <div class="result-card">
           <h3>{{ item.label }}</h3>
@@ -167,70 +170,87 @@
       </div>
       {% endif %}
 
-      <div class="explanation translation-result">
-        <h3>{{ _('Explanation and examples') }}</h3>
+      <div class="explanation animate-slide-up delay-3">
+        <h3>📖 {{ _('Explanation and examples') }}</h3>
 
-        {% if translation_data.detected_language == "French"
-        and translation_data.explanation_data
-        and translation_data.explanation_data.definitions %}
+        {% if translation_data.explanation_data %}
+          
+          {% if translation_data.explanation_data.definitions %}
+          <div class="definition-list">
+            {% for item in translation_data.explanation_data.definitions %}
+            <div class="definition-item">
+              <div class="definition-header">
+                {% if item.number %}
+                <span class="definition-number">{{ item.number }}</span>
+                {% endif %}
+                <span class="definition-text">{{ item.text }}</span>
+              </div>
 
-        <div class="definition-list">
-          {% for item in translation_data.explanation_data.definitions %}
-          <div class="definition-item">
-            <div class="definition-header">
-              {% if item.number %}
-              <span class="definition-number">{{ item.number }}</span>
+              {% if item.examples %}
+              <div class="definition-subblock">
+                <span class="sub-label">🔹 {{ _('Examples') }}</span>
+                <ul>
+                  {% for ex in item.examples %}
+                  <li>{{ ex }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
               {% endif %}
-              <p class="definition-text">{{ item.text }}</p>
-            </div>
 
-            {% if item.examples %}
-            <div class="definition-subblock">
-              <span class="sub-label">{{ _('Examples') }}</span>
-              <ul>
-                {% for ex in item.examples %}
-                <li>{{ ex }}</li>
-                {% endfor %}
-              </ul>
+              {% if item.synonyms %}
+              <div class="definition-subblock">
+                <span class="sub-label">🔹 {{ _('Synonyms') }}</span>
+                <p>{{ item.synonyms | join(', ') }}</p>
+              </div>
+              {% endif %}
             </div>
-            {% endif %}
-
-            {% if item.synonyms %}
-            <div class="definition-subblock">
-              <span class="sub-label">{{ _('Synonyms') }}</span>
-              <p>{{ item.synonyms | join(', ') }}</p>
-            </div>
-            {% endif %}
+            {% endfor %}
           </div>
-          {% endfor %}
-        </div>
+          {% endif %}
 
-        {% if translation_data.explanation_data.locutions %}
-        <div class="locutions-block">
-          <h4>{{ _('Expressions / Locutions') }}</h4>
-          {% for loc in translation_data.explanation_data.locutions %}
-          <div class="locution-item">
-            <strong>{{ loc.title }}</strong>
-            <p>{{ loc.text }}</p>
+          {% if translation_data.explanation_data.locutions %}
+          <div class="locutions-block">
+            <h4>💡 {{ _('Expressions / Locutions') }}</h4>
+            {% for loc in translation_data.explanation_data.locutions %}
+            <div class="locution-item">
+              <strong>{{ loc.title }}</strong>
+              <p>{{ loc.text }}</p>
+            </div>
+            {% endfor %}
           </div>
-          {% endfor %}
-        </div>
-        {% endif %}
+          {% endif %}
 
-        {% elif translation_data.explanation_data and translation_data.explanation_data.fallback_text %}
-        <p>{{ translation_data.explanation_data.fallback_text }}</p>
+          {% if translation_data.explanation_data.corpus_examples %}
+          <div class="locutions-block">
+            <h4>📚 {{ _('Example Phrases') }}</h4>
+            {% for ex in translation_data.explanation_data.corpus_examples %}
+            <div class="locution-item" style="font-style: italic; color: #4b5563; background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 12px; margin-bottom: 8px;">
+              "{{ ex }}"
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if not translation_data.explanation_data.definitions and not translation_data.explanation_data.corpus_examples and translation_data.explanation_data.fallback_text %}
+          <div class="empty-state">
+            <p>{{ translation_data.explanation_data.fallback_text }}</p>
+          </div>
+          {% endif %}
 
         {% else %}
-        <p>{{ _('Definition not found.') }}</p>
+        <div class="empty-state">
+          <p>{{ _('Definition not found.') }}</p>
+        </div>
         {% endif %}
       </div>
-
-      {% else %}
-      <div class="empty-state" id="emptyState">
-        {{ _('There is no translation yet. Type some text to get started.') }}
-      </div>
-      {% endif %}
     </section>
+    {% else %}
+    <section class="result-wrapper">
+      <div class="empty-state" id="emptyState">
+        <p>✨ {{ _('There is no translation yet. Type some text to get started.') }}</p>
+      </div>
+    </section>
+    {% endif %}
   </main>
 
   <button id="scrollTopBtn" aria-label="{{ _('Back to top') }}">↑</button>
@@ -238,32 +258,26 @@
   <script>
     function clearAll() {
       const textArea = document.getElementById('text');
-      if (textArea) {
-        textArea.value = '';
-      }
+      if (textArea) textArea.value = '';
 
-      const translationElements = document.querySelectorAll(
-        '.translation-result, .meta-info, .status-message, .result-title'
-      );
-      translationElements.forEach((el) => el.remove());
-
+      const deckSelect = document.getElementById('deck');
+      if (deckSelect) deckSelect.value = 'Auto Detect';
+      
       const resultWrapper = document.querySelector('.result-wrapper');
-      const existingEmptyState = document.getElementById('emptyState');
-
-      if (!existingEmptyState && resultWrapper) {
-        const emptyState = document.createElement('div');
-        emptyState.id = 'emptyState';
-        emptyState.className = 'empty-state';
-        emptyState.textContent = "{{ _('There is no translation yet. Type some text to get started.') }}";
-        resultWrapper.appendChild(emptyState);
+      if (resultWrapper) {
+        resultWrapper.innerHTML = `
+          <div class="empty-state" id="emptyState">
+            <p>✨ {{ _('There is no translation yet. Type some text to get started.') }}</p>
+          </div>
+        `;
       }
+      
+      document.querySelectorAll('.status-message').forEach(el => el.remove());
     }
 
     function showLoading() {
       const overlay = document.getElementById('loadingOverlay');
-      if (overlay) {
-        overlay.classList.remove('hidden');
-      }
+      if (overlay) overlay.classList.remove('hidden');
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -273,40 +287,33 @@
       if (form) {
         form.addEventListener('submit', function () {
           showLoading();
-
           const submitButton = form.querySelector('.btn-primary');
           if (submitButton) {
             submitButton.disabled = true;
-            submitButton.textContent = "{{ _('Translating...') }}";
+            submitButton.innerHTML = "<span>⏳</span> {{ _('Translating...') }}";
           }
         });
       }
 
       if (scrollBtn) {
         window.addEventListener('scroll', () => {
-          if (window.scrollY > 250) {
-            scrollBtn.classList.add('show');
-          } else {
-            scrollBtn.classList.remove('show');
-          }
+          if (window.scrollY > 250) scrollBtn.classList.add('show');
+          else scrollBtn.classList.remove('show');
         });
 
         scrollBtn.addEventListener('click', () => {
-          window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       }
 
       setTimeout(() => {
-        const alerts = document.querySelectorAll('.status-message');
-        alerts.forEach(alert => {
+        document.querySelectorAll('.status-message').forEach(alert => {
+          alert.style.transition = 'all 0.5s ease';
           alert.style.opacity = '0';
           alert.style.transform = 'translateY(-10px)';
-          setTimeout(() => alert.remove(), 300);
+          setTimeout(() => alert.remove(), 500);
         });
-      }, 3000);
+      }, 5000);
     });
   </script>
 </body>
