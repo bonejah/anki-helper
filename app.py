@@ -1,5 +1,6 @@
 import base64
 import os
+import re
 from urllib.parse import quote
 
 import requests
@@ -12,7 +13,10 @@ from langdetect import LangDetectException, detect_langs
 app = Flask(__name__)
 app.secret_key = "change-this-secret-key"
 
-# Flask-Babel config
+# ===============================
+# I18N
+# ===============================
+
 LANGUAGES = {
     "pt": "Português",
     "en": "English",
@@ -24,10 +28,23 @@ def get_locale():
     lang = session.get("ui_lang")
     if lang in LANGUAGES:
         return lang
-    return request.accept_languages.best_match(list(LANGUAGES.keys())) or "pt"
+    return "pt"
 
 
 babel = Babel(app, locale_selector=get_locale)
+
+
+@app.context_processor
+def inject_globals():
+    return {
+        "ui_languages": LANGUAGES,
+        "current_ui_lang": get_locale(),
+    }
+
+
+# ===============================
+# CONFIG
+# ===============================
 
 ANKI_CONNECT_URL = "http://localhost:8765"
 
@@ -35,17 +52,14 @@ SUPPORTED_LANGS = {
     "fr": {
         "label": "French",
         "deck": "French",
-        "dictionary": "larousse_fr",
     },
     "en": {
         "label": "English",
         "deck": "English",
-        "dictionary": "basic_placeholder",
     },
     "pt": {
         "label": "Portuguese",
         "deck": "Portuguese",
-        "dictionary": "basic_placeholder",
     },
 }
 
@@ -56,16 +70,19 @@ SHORT_TEXT_HINTS = {
     "au revoir": "fr",
     "devoir": "fr",
     "pouvoir": "fr",
+    "aurais": "fr",
     "hello": "en",
     "hi": "en",
     "thanks": "en",
     "thank you": "en",
     "book": "en",
+    "have": "en",
     "olá": "pt",
     "ola": "pt",
     "oi": "pt",
     "obrigado": "pt",
     "obrigada": "pt",
+    "ter": "pt",
     "como vai": "pt",
     "como voce vai": "pt",
 }
@@ -77,13 +94,9 @@ TRANSLATION_MAP = {
 }
 
 
-@app.context_processor
-def inject_globals():
-    return {
-        "ui_languages": LANGUAGES,
-        "current_ui_lang": get_locale(),
-    }
-
+# ===============================
+# HELPERS
+# ===============================
 
 def normalize_text(text: str) -> str:
     return (text or "").strip()
@@ -117,7 +130,59 @@ def invoke_anki(action, params=None):
     response = requests.post(ANKI_CONNECT_URL, json=payload, timeout=10)
     return response.json()
 
-def is_valid_french_word(word):
+
+# ===============================
+# COLLINS
+# ===============================
+
+def fetch_collins_translations(word: str, src_lang: str):
+    word = normalize_text(word)
+    if not word:
+        return []
+
+    url_map = {
+        "fr": f"https://www.collinsdictionary.com/dictionary/french-english/{quote(word)}",
+        "pt": f"https://www.collinsdictionary.com/dictionary/portuguese-english/{quote(word)}",
+    }
+
+    if src_lang not in url_map:
+        return []
+
+    try:
+        response = requests.get(
+            url_map[src_lang],
+            timeout=8,
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
+
+        if response.status_code != 200:
+            return []
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        page_text = soup.get_text(" ", strip=True)
+
+        matches = re.findall(r"\bto [a-z][a-z ]+|must\b", page_text, flags=re.IGNORECASE)
+
+        seen = set()
+        results = []
+        for m in matches:
+            cleaned = m.strip()
+            if cleaned and cleaned not in seen:
+                seen.add(cleaned)
+                results.append(cleaned)
+
+        return results[:4]
+
+    except Exception as e:
+        print("Erro ao consultar Collins:", e)
+        return []
+
+
+# ===============================
+# DETECÇÃO
+# ===============================
+
+def is_valid_french_word(word: str) -> bool:
     try:
         url = f"https://www.larousse.fr/dictionnaires/francais/{quote(word)}"
         response = requests.get(url, timeout=5)
@@ -126,11 +191,7 @@ def is_valid_french_word(word):
             return False
 
         soup = BeautifulSoup(response.text, "html.parser")
-
-        # Se encontrou definição → é francês
-        definition = soup.find("article", class_="BlocDefinition")
-
-        return definition is not None
+        return soup.find("article", class_="BlocDefinition") is not None
 
     except Exception:
         return False
@@ -163,22 +224,29 @@ def detect_language_safely(text: str):
                 print(f"Idioma suportado com baixa confiança: {candidate.lang}")
                 return candidate.lang
 
-        # 🚨 NOVO: fallback inteligente
-        print("Tentando fallback para francês...")
+        print("Idioma detectado fora dos suportados.")
 
         if is_valid_french_word(text):
-            print("Detectado como francês via Larousse fallback")
+            print("Detectado como francês via fallback Larousse")
             return "fr"
-        
+
         return None
 
     except LangDetectException:
         print("Não foi possível detectar o idioma.")
+        if is_valid_french_word(text):
+            return "fr"
         return None
     except Exception as e:
         print("Erro ao detectar idioma:", e)
+        if is_valid_french_word(text):
+            return "fr"
         return None
 
+
+# ===============================
+# ANKI / DECKS
+# ===============================
 
 def get_anki_decks():
     try:
@@ -235,6 +303,10 @@ def note_exists_in_deck(text: str, deck_name: str) -> bool:
         return False
 
 
+# ===============================
+# AUDIO
+# ===============================
+
 def send_audio_to_anki(filename):
     if not filename or not os.path.exists(filename):
         return None
@@ -264,6 +336,10 @@ def send_audio_to_anki(filename):
         print("Erro ao enviar áudio para Anki:", e)
         return None
 
+
+# ===============================
+# LAROUSSE
+# ===============================
 
 def parse_larousse_with_audio(word, max_definitions=4, max_locutions=4):
     safe_word = quote(word)
@@ -366,6 +442,10 @@ def parse_larousse_with_audio(word, max_definitions=4, max_locutions=4):
             "audio_filename": None,
         }
 
+
+# ===============================
+# EXPLICAÇÕES
+# ===============================
 
 def get_explanation_by_language(text, lang):
     if lang == "fr":
@@ -471,23 +551,41 @@ def build_explanation_html_for_anki(explanation_data):
     return "".join(html_parts) or f"<div>{_('Definition not found.')}</div>"
 
 
+# ===============================
+# TRADUÇÃO HÍBRIDA
+# ===============================
+
 def translate_text(text, src_lang):
     translator = Translator()
 
     if src_lang not in TRANSLATION_MAP:
         raise ValueError(_("Unsupported language."))
 
+    is_short = len(text.split()) <= 3
+    collins_candidates = fetch_collins_translations(text, src_lang) if is_short else []
+
     translations = []
 
     for dest_lang, label in TRANSLATION_MAP[src_lang]:
-        translated = translator.translate(text, src=src_lang, dest=dest_lang).text
+        translated_text = None
+
+        if dest_lang == "en" and collins_candidates:
+            translated_text = " / ".join(collins_candidates)
+
+        if not translated_text:
+            translated_text = translator.translate(text, src=src_lang, dest=dest_lang).text
+
         translations.append({
             "label": label,
-            "text": translated,
+            "text": translated_text,
         })
 
     return translations
 
+
+# ===============================
+# CARD ANKI
+# ===============================
 
 def create_anki_card(
     text,
@@ -602,6 +700,10 @@ def create_anki_card(
         print(error_msg)
         return False, error_msg
 
+
+# ===============================
+# ROTAS
+# ===============================
 
 @app.route("/set-language/<lang_code>")
 def set_language(lang_code):
@@ -736,3 +838,4 @@ def create_deck():
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
+    

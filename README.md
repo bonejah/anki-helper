@@ -12,3 +12,8 @@ Sempre que adicionar novos textos no código:
 pybabel extract -F babel.cfg -o messages.pot .
 pybabel update -i messages.pot -d translations
 pybabel compile -d translations
+
+
+https://www.collinsdictionary.com/dictionary/english/have
+https://www.collinsdictionary.com/dictionary/french-english/devoir
+https://www.collinsdictionary.com/dictionary/portuguese-english/ter_1
