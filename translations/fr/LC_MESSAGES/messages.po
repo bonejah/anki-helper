@@ -1,0 +1,149 @@
+# French translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-03-25 19:14-0700\n"
+"PO-Revision-Date: 2026-03-25 19:16-0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr\n"
+"Language-Team: fr <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: templates/index.html:7
+msgid "Translator and Anki Helper"
+msgstr "Traducteur et assistant Anki"
+
+#: templates/index.html:16
+msgid "Translating and saving to Anki..."
+msgstr "Traduction et enregistrement dans Anki..."
+
+#: templates/index.html:44
+msgid "Trilingual translator + Anki"
+msgstr "Traducteur trilingue + Anki"
+
+#: templates/index.html:45
+msgid "Turn words into learning"
+msgstr "Transformez les mots en apprentissage"
+
+#: templates/index.html:47
+msgid ""
+"Translate words and expressions between French, English and Portuguese, "
+"save them to Anki and review\n"
+"          later."
+msgstr "Traduisez des mots et expressions entre le français, l’anglais et le portugais, enregistrez-les dans Anki et révisez-les plus tard."
+
+#: templates/index.html:53
+msgid "Supported languages"
+msgstr "Langues prises en charge"
+
+#: templates/index.html:55
+msgid "French → English + Portuguese"
+msgstr "Français → Anglais + Portugais"
+
+#: templates/index.html:56
+msgid "English → French + Portuguese"
+msgstr "Anglais → Français + Portugais"
+
+#: templates/index.html:57
+msgid "Portuguese → English + French"
+msgstr "Portugais → Anglais + Français"
+
+#: templates/index.html:58
+msgid "Other languages are not supported at the moment"
+msgstr "Les autres langues ne sont pas prises en charge pour le moment"
+
+#: templates/index.html:65 templates/index.html:77
+msgid "Create deck"
+msgstr "Créer un deck"
+
+#: templates/index.html:67
+msgid "Create custom decks to organize your cards."
+msgstr "Créez des decks personnalisés pour organiser vos cartes."
+
+#: templates/index.html:72
+msgid "Deck name"
+msgstr "Nom du deck"
+
+#: templates/index.html:73
+msgid "Example: French::Travel"
+msgstr "Exemple : French::Travel"
+
+#: templates/index.html:83 templates/index.html:108
+msgid "Translate"
+msgstr "Traduire"
+
+#: templates/index.html:85
+msgid "Choose a deck manually or use Auto Detect."
+msgstr "Choisissez un deck manuellement ou utilisez la détection automatique."
+
+#: templates/index.html:90
+msgid "Deck"
+msgstr "Deck"
+
+#: templates/index.html:101
+msgid "Text"
+msgstr "Texte"
+
+#: templates/index.html:103
+msgid "Type a word, expression or sentence in French, English or Portuguese..."
+msgstr "Saisissez un mot, une expression ou une phrase en français, anglais ou portugais..."
+
+#: templates/index.html:109
+msgid "Clear"
+msgstr "Effacer"
+
+#: templates/index.html:113
+msgid ""
+"This app only works with French, English and Portuguese. If another "
+"language is entered, the system\n"
+"            will show a warning."
+msgstr "Cette application fonctionne uniquement avec le français, l’anglais et le portugais. Si une autre langue est saisie, un avertissement sera affiché."
+
+#: templates/index.html:123
+msgid "Result"
+msgstr "Résultat"
+
+#: templates/index.html:128
+msgid "Detected language"
+msgstr "Langue détectée"
+
+#: templates/index.html:135
+msgid "Deck used"
+msgstr "Deck utilisé"
+
+#: templates/index.html:153
+msgid "Explanation and examples"
+msgstr "Explication et exemples"
+
+#: templates/index.html:171
+msgid "Examples"
+msgstr "Exemples"
+
+#: templates/index.html:182
+msgid "Synonyms"
+msgstr "Synonymes"
+
+#: templates/index.html:192
+msgid "Expressions / Locutions"
+msgstr "Expressions / Locutions"
+
+#: templates/index.html:206
+msgid "Definition not found."
+msgstr "Définition non trouvée."
+
+#: templates/index.html:212 templates/index.html:237
+msgid "There is no translation yet. Type some text to get started."
+msgstr "Aucune traduction pour le moment. Saisissez du texte pour commencer."
+
+#: templates/index.html:259
+msgid "Translating..."
+msgstr "Traduction en cours..."

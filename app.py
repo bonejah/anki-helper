@@ -4,11 +4,30 @@ from urllib.parse import quote
 
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, session
+from flask_babel import Babel, gettext as _
 from googletrans import Translator
 from langdetect import LangDetectException, detect_langs
 
 app = Flask(__name__)
+app.secret_key = "change-this-secret-key"
+
+# Flask-Babel config
+LANGUAGES = {
+    "pt": "Português",
+    "en": "English",
+    "fr": "Français",
+}
+
+
+def get_locale():
+    lang = session.get("ui_lang")
+    if lang in LANGUAGES:
+        return lang
+    return request.accept_languages.best_match(list(LANGUAGES.keys())) or "pt"
+
+
+babel = Babel(app, locale_selector=get_locale)
 
 ANKI_CONNECT_URL = "http://localhost:8765"
 
@@ -42,6 +61,7 @@ SHORT_TEXT_HINTS = {
     "thank you": "en",
     "book": "en",
     "olá": "pt",
+    "ola": "pt",
     "oi": "pt",
     "obrigado": "pt",
     "obrigada": "pt",
@@ -56,8 +76,35 @@ TRANSLATION_MAP = {
 }
 
 
+@app.context_processor
+def inject_globals():
+    return {
+        "ui_languages": LANGUAGES,
+        "current_ui_lang": get_locale(),
+    }
+
+
 def normalize_text(text: str) -> str:
     return (text or "").strip()
+
+
+def normalize_for_hint(text: str) -> str:
+    return (
+        text.lower()
+        .strip(" .,;:!?")
+        .replace("á", "a")
+        .replace("à", "a")
+        .replace("â", "a")
+        .replace("ã", "a")
+        .replace("é", "e")
+        .replace("ê", "e")
+        .replace("í", "i")
+        .replace("ó", "o")
+        .replace("ô", "o")
+        .replace("õ", "o")
+        .replace("ú", "u")
+        .replace("ç", "c")
+    )
 
 
 def invoke_anki(action, params=None):
@@ -76,22 +123,7 @@ def detect_language_safely(text: str):
     if not text:
         return None
 
-    normalized = (
-        text.lower()
-        .strip(" .,;:!?")
-        .replace("á", "a")
-        .replace("à", "a")
-        .replace("â", "a")
-        .replace("ã", "a")
-        .replace("é", "e")
-        .replace("ê", "e")
-        .replace("í", "i")
-        .replace("ó", "o")
-        .replace("ô", "o")
-        .replace("õ", "o")
-        .replace("ú", "u")
-        .replace("ç", "c")
-    )
+    normalized = normalize_for_hint(text)
 
     if len(text.split()) <= 3 and normalized in SHORT_TEXT_HINTS:
         lang = SHORT_TEXT_HINTS[normalized]
@@ -314,69 +346,85 @@ def get_explanation_by_language(text, lang):
     if lang == "fr":
         return parse_larousse_with_audio(text)
 
-    if lang == "en":
+    if lang in {"en", "pt"}:
         return {
             "definitions": [],
             "locutions": [],
             "audio_filename": None,
-            "fallback_text": f"Explicação detalhada ainda não implementada para {SUPPORTED_LANGS[lang]['label']}. Palavra consultada: {text}",
-        }
-
-    if lang == "pt":
-        return {
-            "definitions": [],
-            "locutions": [],
-            "audio_filename": None,
-            "fallback_text": f"Explicação detalhada ainda não implementada para {SUPPORTED_LANGS[lang]['label']}. Palavra consultada: {text}",
+            "fallback_text": _(
+                "Detailed explanation is not implemented yet for %(language)s. Queried word: %(word)s",
+                language=SUPPORTED_LANGS[lang]["label"],
+                word=text,
+            ),
         }
 
     return {
         "definitions": [],
         "locutions": [],
         "audio_filename": None,
-        "fallback_text": "Definição não encontrada.",
+        "fallback_text": _("Definition not found."),
     }
 
 
-def build_explanation_text_for_anki(explanation_data):
-    parts = []
-
+def build_explanation_html_for_anki(explanation_data):
     definitions = explanation_data.get("definitions", [])
     locutions = explanation_data.get("locutions", [])
     fallback_text = explanation_data.get("fallback_text")
 
+    html_parts = []
+
     if definitions:
-        parts.append("Definições:")
-        parts.append("")
+        html_parts.append("<div><b>Definitions</b></div>")
+        html_parts.append("<br>")
 
         for item in definitions:
             number = f"{item['number']}. " if item.get("number") else ""
-            parts.append(f"{number}{item['text']}")
+            html_parts.append(f"<div><b>{number}</b>{item['text']}</div>")
 
             if item.get("examples"):
-                parts.append("Exemplos: " + " ; ".join(item["examples"]))
+                examples_html = "".join(
+                    [f"<li>{ex}</li>" for ex in item["examples"]]
+                )
+                html_parts.append(f"""
+                    <div style="margin-top:6px;">
+                        <b>Examples:</b>
+                        <ul style="margin-top:4px;">{examples_html}</ul>
+                    </div>
+                """)
 
             if item.get("synonyms"):
-                parts.append("Sinônimos: " + ", ".join(item["synonyms"]))
+                synonyms = ", ".join(item["synonyms"])
+                html_parts.append(f"""
+                    <div style="margin-top:6px;">
+                        <b>Synonyms:</b> {synonyms}
+                    </div>
+                """)
 
-            parts.append("")
+            html_parts.append("<br>")
 
     if locutions:
-        parts.append("Expressões / Locuções:")
+        html_parts.append("<div style='margin-top:12px;'><b>Expressions / Locutions</b></div>")
+        html_parts.append("<br>")
+
         for loc in locutions:
-            parts.append(f"{loc['title']}: {loc['text']}")
+            html_parts.append(f"""
+                <div style="margin-bottom:10px;">
+                    <b>{loc['title']}</b><br>
+                    {loc['text']}
+                </div>
+            """)
 
-    if not parts and fallback_text:
-        return fallback_text
+    if not html_parts and fallback_text:
+        return f"<div>{fallback_text}</div>"
 
-    return "\n".join(parts).strip() or "Definição não encontrada."
+    return "".join(html_parts) or "<div>Definition not found.</div>"
 
 
 def translate_text(text, src_lang):
     translator = Translator()
 
     if src_lang not in TRANSLATION_MAP:
-        raise ValueError("Idioma não suportado.")
+        raise ValueError(_("Unsupported language."))
 
     translations = []
 
@@ -390,10 +438,36 @@ def translate_text(text, src_lang):
     return translations
 
 
-def create_anki_card(text, translation_data, deck_name, detected_lang, explanation_text_for_anki, audio_tag_for_anki=""):
-    translations_text = "\n\n".join(
-        [f"{item['label']}: {item['text']}" for item in translation_data["translations"]]
-    )
+def create_anki_card(text, translation_data, deck_name, detected_lang, explanation_html_for_anki, audio_tag_for_anki=""):
+    translations_html = "".join([
+        f"""
+        <div style="margin-bottom:10px; padding:10px; border:1px solid #e5e7eb; border-radius:10px;">
+            <b>{item['label']}:</b><br>
+            {item['text']}
+        </div>
+        """
+        for item in translation_data["translations"]
+    ])
+
+    back_html = f"""
+    <div style="font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; text-align: left;">
+        <div style="margin-bottom:12px;">
+            <b>Detected language:</b> {SUPPORTED_LANGS[detected_lang]['label']}
+        </div>
+
+        <div style="margin-bottom:16px;">
+            {translations_html}
+        </div>
+
+        <div style="margin-bottom:16px;">
+            {audio_tag_for_anki}
+        </div>
+
+        <div style="padding:14px; border:1px solid #e5e7eb; border-radius:12px; background:#fafafa;">
+            {explanation_html_for_anki}
+        </div>
+    </div>
+    """
 
     payload = {
         "note": {
@@ -401,11 +475,7 @@ def create_anki_card(text, translation_data, deck_name, detected_lang, explanati
             "modelName": "Basic",
             "fields": {
                 "Front": text,
-                "Back": (
-                    f"Idioma detectado: {SUPPORTED_LANGS[detected_lang]['label']}\n\n"
-                    f"{translations_text}\n\n"
-                    f"{audio_tag_for_anki}{explanation_text_for_anki}"
-                ),
+                "Back": back_html,
             },
             "tags": ["auto-generated", f"lang-{detected_lang.lower()}"],
         }
@@ -438,6 +508,13 @@ def create_anki_card(text, translation_data, deck_name, detected_lang, explanati
         return False, error_msg
 
 
+@app.route("/set-language/<lang_code>")
+def set_language(lang_code):
+    if lang_code in LANGUAGES:
+        session["ui_lang"] = lang_code
+    return redirect(request.referrer or "/")
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     translation_data = {}
@@ -452,7 +529,7 @@ def home():
 
         if not text:
             translation_data = {
-                "error_message": "Digite um texto antes de traduzir."
+                "error_message": _("Type some text before translating.")
             }
             return render_template(
                 "index.html",
@@ -466,7 +543,7 @@ def home():
 
         if not detected_lang:
             translation_data = {
-                "error_message": "Este app suporta apenas French, English e Portuguese."
+                "error_message": _("This app only supports French, English and Portuguese.")
             }
             return render_template(
                 "index.html",
@@ -486,16 +563,16 @@ def home():
         explanation_data = get_explanation_by_language(text, detected_lang)
         audio_file = explanation_data.get("audio_filename")
         audio_file_safe = send_audio_to_anki(audio_file)
-        audio_tag_for_anki = f"[audio:{audio_file_safe}]\n" if audio_file_safe else ""
+        audio_tag_for_anki = f"[sound:{audio_file_safe}]\n" if audio_file_safe else ""
 
         try:
             translations = translate_text(text, detected_lang)
-            explanation_text_for_anki = build_explanation_text_for_anki(explanation_data)
+            explanation_html_for_anki = build_explanation_html_for_anki(explanation_data)
 
             translation_data = {
                 "translations": translations,
                 "detected_language": SUPPORTED_LANGS[detected_lang]["label"],
-                "explanation_data": explanation_data,
+                "explanation_data": explanation_html_for_anki,
             }
 
             if deck_ok:
@@ -504,7 +581,7 @@ def home():
                     translation_data=translation_data,
                     deck_name=selected_deck,
                     detected_lang=detected_lang,
-                    explanation_text_for_anki=explanation_text_for_anki,
+                    explanation_text_for_anki=explanation_html_for_anki,
                     audio_tag_for_anki=audio_tag_for_anki,
                 )
 
@@ -513,12 +590,15 @@ def home():
                 else:
                     translation_data["error_message"] = message
             else:
-                translation_data["error_message"] = f"Não foi possível criar ou acessar o deck {selected_deck}."
+                translation_data["error_message"] = _(
+                    "Could not create or access the %(deck)s deck.",
+                    deck=selected_deck,
+                )
 
         except Exception as e:
             translation_data = {
                 "detected_language": SUPPORTED_LANGS[detected_lang]["label"],
-                "error_message": f"Erro ao traduzir o texto: {e}",
+                "error_message": _("Error translating text: %(error)s", error=e),
             }
 
         decks = get_anki_decks()
@@ -537,15 +617,15 @@ def create_deck():
     deck_name = normalize_text(request.form.get("new_deck"))
 
     if not deck_name:
-        return "Nome do deck vazio", 400
+        return _("Empty deck name"), 400
 
     try:
         created = ensure_deck_exists(deck_name)
 
         if created:
-            message = f"Deck {deck_name} criado com sucesso."
+            message = _("Deck %(deck)s created successfully.", deck=deck_name)
         else:
-            message = f"Não foi possível criar o deck {deck_name}."
+            message = _("Could not create the %(deck)s deck.", deck=deck_name)
 
         return render_template(
             "index.html",
@@ -556,8 +636,9 @@ def create_deck():
         )
 
     except Exception as e:
-        return f"Erro ao criar deck: {e}", 500
+        return _("Error creating deck: %(error)s", error=e), 500
 
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
+    
