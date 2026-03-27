@@ -1,0 +1,194 @@
+# English translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-03-26 17:27-0700\n"
+"PO-Revision-Date: 2026-03-25 19:16-0700\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: templates/index.html:7
+msgid "Translator and Anki Helper"
+msgstr "Translator and Anki Helper"
+
+#: templates/index.html:19
+msgid "Translating and saving to Anki..."
+msgstr "Translating and saving to Anki..."
+
+#: templates/index.html:48
+msgid "Requirement:"
+msgstr ""
+
+#: templates/index.html:48
+msgid "Anki must be open with the"
+msgstr ""
+
+#: templates/index.html:48
+msgid "plugin installed for cards to be saved."
+msgstr ""
+
+#: templates/index.html:55
+msgid "Connected:"
+msgstr ""
+
+#: templates/index.html:55
+msgid "Anki is running and ready!"
+msgstr ""
+
+#: templates/index.html:74
+#, fuzzy
+msgid "Trilingual translator 🇧🇷 🇺🇸 🇫🇷 + Anki"
+msgstr "Trilingual translator + Anki"
+
+#: templates/index.html:75
+msgid "Turn words into learning"
+msgstr "Turn words into learning"
+
+#: templates/index.html:77
+msgid ""
+"Translate words and expressions between French, English and Portuguese, "
+"save them to Anki and review\n"
+"          later."
+msgstr ""
+"Translate words and expressions between French, English and Portuguese, "
+"save them to Anki and review later."
+
+#: templates/index.html:86
+msgid "Supported languages"
+msgstr "Supported languages"
+
+#: templates/index.html:88
+msgid "French → English + Portuguese"
+msgstr "French → English + Portuguese"
+
+#: templates/index.html:89
+msgid "English → French + Portuguese"
+msgstr "English → French + Portuguese"
+
+#: templates/index.html:90
+msgid "Portuguese → English + French"
+msgstr "Portuguese → English + French"
+
+#: templates/index.html:95 templates/index.html:107
+msgid "Create deck"
+msgstr "Create deck"
+
+#: templates/index.html:97
+msgid "Create custom decks to organize your cards."
+msgstr "Create custom decks to organize your cards."
+
+#: templates/index.html:102
+msgid "Deck name"
+msgstr "Deck name"
+
+#: templates/index.html:103
+msgid "Example: French::Travel"
+msgstr "Example: French::Travel"
+
+#: templates/index.html:115 templates/index.html:140
+msgid "Translate"
+msgstr "Translate"
+
+#: templates/index.html:117
+msgid "Choose a deck manually or use Auto Detect."
+msgstr "Choose a deck manually or use Auto Detect."
+
+#: templates/index.html:122
+msgid "Deck"
+msgstr "Deck"
+
+#: templates/index.html:133
+msgid "Text"
+msgstr "Text"
+
+#: templates/index.html:135
+msgid "Type a word, expression or sentence in French, English or Portuguese..."
+msgstr "Type a word, expression or sentence in French, English or Portuguese..."
+
+#: templates/index.html:143
+msgid "Clear"
+msgstr "Clear"
+
+#: templates/index.html:148
+#, fuzzy
+msgid "This app only works with French, English and Portuguese."
+msgstr "Type a word, expression or sentence in French, English or Portuguese..."
+
+#: templates/index.html:158
+msgid "Result"
+msgstr "Result"
+
+#: templates/index.html:163
+msgid "Detected language"
+msgstr "Detected language"
+
+#: templates/index.html:171
+msgid "Deck used"
+msgstr "Deck used"
+
+#: templates/index.html:190
+msgid "Explanation and examples"
+msgstr "Explanation and examples"
+
+#: templates/index.html:207
+msgid "Examples"
+msgstr "Examples"
+
+#: templates/index.html:218
+msgid "Synonyms"
+msgstr "Synonyms"
+
+#: templates/index.html:229
+msgid "Expressions / Locutions"
+msgstr "Expressions / Locutions"
+
+#: templates/index.html:241
+#, fuzzy
+msgid "Example Phrases"
+msgstr "Examples"
+
+#: templates/index.html:258
+msgid "Definition not found."
+msgstr "Definition not found."
+
+#: templates/index.html:266 templates/index.html:293
+msgid "There is no translation yet. Type some text to get started."
+msgstr "There is no translation yet. Type some text to get started."
+
+#: templates/index.html:274
+msgid "Made with ❤️ for language learners."
+msgstr ""
+
+#: templates/index.html:279
+msgid "Back to top"
+msgstr ""
+
+#: templates/index.html:316
+msgid "Translating..."
+msgstr "Translating..."
+
+#~ msgid "Other languages are not supported at the moment"
+#~ msgstr "Other languages are not supported at the moment"
+
+#~ msgid ""
+#~ "This app only works with French, "
+#~ "English and Portuguese. If another "
+#~ "language is entered, the system\n"
+#~ "            will show a warning."
+#~ msgstr ""
+#~ "This app only works with French, "
+#~ "English and Portuguese. If another "
+#~ "language is entered, the system will "
+#~ "show a warning."
+
