@@ -1,94 +1,67 @@
-# 🌍 Anki Helper: Trilingual Dictionary & Flashcard Creator
+# 🌍 Anki Helper: Trilingual Dictionary & Standalone Desktop App
 
-**Anki Helper** is a premium web application designed to accelerate language learning (French, English, and Portuguese). It seamlessly integrates with the **Collins Dictionary** to provide accurate definitions, native audio, and real-world example phrases, all while allowing you to create high-quality Anki flashcards with a single click.
+**Anki Helper** is a premium, trilingual translation tool (French 🇫🇷, English 🇺🇸, and Portuguese 🇧🇷) that transforms the way you learn languages. It combines the power of the **Collins Dictionary** with high-quality **Text-to-Speech (TTS)** and a standalone **macOS Application** to create perfect Anki flashcards with a single click.
+
+![App Preview](https://github.com/bonejah/anki-helper/raw/main/static/screenshot_placeholder.png)
 
 ---
 
 ## ✨ Key Features
 
-- **Trilingual Support**: Seamless translation and language detection between **French (🇫🇷)**, **English (🇺🇸)**, and **Portuguese (🇧🇷)**.
-- **Collins Dictionary Integration**: Fetches detailed definitions, synonyms, and "Example sentences from the Collins Corpus" for natural usage.
-- **One-Click Anki Cards**: Automatically creates formatted Anki cards with:
-    - Target word and translations.
-    - Native audio (MP3) automatically attached.
-    - Detailed definitions and example phrases.
-- **Premium UI/UX**: Modern interface featuring **Glassmorphism**, smooth staggered animations, and a dynamic loading system.
-- **Robust Detection**: Intelligent language detection with a Google Translate fallback for broken or ambiguous sentences.
+- **🍎 Standalone macOS App**: No terminal required! Launch directly from your Applications folder with a professional custom icon.
+- **🔊 High-Quality Audio (TTS)**: 100% audio coverage. Uses **gTTS (Google Text-to-Speech)** to generate natural-sounding audio for full sentences and native recordings from Collins for dictionary words.
+- **💎 Premium UI/UX**: Modern **Glassmorphism** interface with smooth animations, loading overlays, and dynamic status indicators.
+- **🔗 Smart Anki Integration**: 
+    - **Live Connection Status**: Automatically detects if Anki + AnkiConnect is running.
+    - **Audio Generation Badge**: Visual confirmation in the UI when audio is ready for Anki.
+- **🌍 Trilingual Core**: Simultaneous translation between French, English, and Portuguese with automatic language detection.
+- **📚 Rich Context**: Fetches definitions, synonyms, and real-world example phrases directly into your Anki cards.
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 1. The Easy Way (macOS)
+1. Ensure **Anki** is open with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin installed.
+2. Download the latest version from the `dist/` folder.
+3. Open **`Anki Helper.app`**.
+4. Your browser will open automatically at `http://127.0.0.1:5000`.
 
-- **Python 3.8+**
-- **Anki** (Desktop version)
-- **AnkiConnect Plugin**: Install the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) add-on in Anki to enable the integration.
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/bonejah/anki-helper.git
-   cd anki-helper
-   ```
-
-2. **Create and activate a virtual environment**:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On macOS/Linux
-   # .venv\Scripts\activate  # On Windows
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Running the App
-
-1. Ensure **Anki** is open on your computer.
-2. Start the Flask server:
-   ```bash
-   python app.py
-   ```
-3. Open your browser and navigate to: [http://127.0.0.1:5000](http://127.0.0.1:5000)
+### 2. Developer Mode (Manual)
+1. **Clone the repo**: `git clone https://github.com/bonejah/anki-helper.git`
+2. **Install deps**: `pip install -r requirements.txt`
+3. **Run**: `python app.py`
 
 ---
 
-## 🌍 Localization & Translations (Babel)
+## 🛠️ Build & Architecture
 
-The app is localized using Flask-Babel. If you add new strings to the code, use these commands to update translations:
+- **Backend**: Flask (Python 3.9+)
+- **Packaging**: PyInstaller (for standalone Mac bundle)
+- **Audio Engine**: gTTS & Collins Audio Scraper
+- **I18n**: Fully localized in Portuguese, English, and French using **Flask-Babel**.
 
+---
+
+## 📝 Localization
+
+If you want to contribute new translations:
 ```bash
-# 1. Extract new strings
+# Extract strings
 pybabel extract -F babel.cfg -o messages.pot .
-
-# 2. Update existing translation files
+# Update catalog
 pybabel update -i messages.pot -d translations
-
-# 3. (Optional) Edit the .po files in translations/ to add your translations
-
-# 4. Compile translations
+# Compile
 pybabel compile -d translations
 ```
 
 ---
 
-## 🛠️ Built With
-
-- **Flask**: Web backend.
-- **BeautifulSoup4 & CloudScraper**: Advanced web scraping for dictionary data.
-- **Googletrans**: Multi-language translation and robust detection.
-- **AnkiConnect**: API integration with Anki.
-- **CSS3 (Advanced)**: Glassmorphism and premium animations.
+## ⚖️ License & Credits
+- **License**: MIT
+- **Data Source**: [Collins Dictionary](https://www.collinsdictionary.com/)
+- **Author**: Bonejah (Bruno Lima)
 
 ---
 
-## 📝 License
-
-This project is for educational purposes. All dictionary data belongs to [Collins Dictionary](https://www.collinsdictionary.com/).
-
----
-
-*Made with ❤️ for language learners.*
+*Made with ❤️ for language learners who want a professional study workflow.*
