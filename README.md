@@ -27,29 +27,34 @@ There are two ways to use **Anki Helper**, depending on your profile:
 This is the easiest way to use the app without touching the terminal.
 1.  Open the `dist/` folder in this repository.
 2.  Double-click **`Anki Helper.app`**.
-3.  The app will launch a background server and automatically open your browser at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+3.  The app will launch a background server and automatically open your browser at [http://127.0.0.1:5001](http://127.0.0.1:5001).
 
 ### 2. 🛠️ Developer Mode (CLI)
 Use this if you want to modify the code or see debug logs.
-1.  **Install dependencies**: `pip install -r requirements.txt`
-2.  **Run the server**:
+
+1.  **Activate the environment**:
     ```bash
     source .venv/bin/activate
+    ```
+2.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  **Run the server**:
+    ```bash
     python app.py
     ```
-3.  Access the app at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+4.  Access the app at [http://127.0.0.1:5001](http://127.0.0.1:5001).
 
-## Testing
+---
 
-This project uses `pytest` for unit testing. To run the tests:
+## 🧪 Testing
 
-1.  **Install test dependencies**:
+This project uses `pytest` for unit testing. To run the tests correctly within the environment:
+
+1.  **Run all tests**:
     ```bash
-    pip install pytest pytest-mock
-    ```
-2.  **Run all tests**:
-    ```bash
-    pytest
+    python -m pytest
     ```
     
 The tests use mocks for external services (Anki, Google Translate, Collins Dictionary), so they can be run offline without actual AnkiConnect or internet connectivity.
@@ -59,15 +64,19 @@ The tests use mocks for external services (Anki, Google Translate, Collins Dicti
 ## 🔩 Troubleshooting
 
 ### ⚠️ "Address already in use" (Port 5000)
-On **macOS Monterey or newer**, the "AirPlay Receiver" service uses port 5000 by default. If you see this error when running the app:
+On **macOS Monterey or newer**, the "AirPlay Receiver" service uses port 5000. 
+**Note:** The app now uses **port 5001** by default to avoid this.
 
-**Solution A (Disable AirPlay Receiver):**
-1.  Go to **System Settings** > **General** > **AirDrop & Handoff**.
+If you still have issues:
+1.  Go to **System Settings** > **General** > **AirPlay & Handoff**.
 2.  Turn off **AirPlay Receiver**.
 
-**Solution B (Run on a different port):**
+### ❌ "ModuleNotFoundError"
+If you see this error, it means the virtual environment is not active or dependencies are missing.
+**Fix:**
 ```bash
-PORT=5001 python app.py
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ---
