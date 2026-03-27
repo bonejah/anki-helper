@@ -48,6 +48,22 @@ Use this if you want to modify the code or see debug logs.
 
 ---
 
+## 📦 Building the App (macOS)
+
+If you modify the Python code and want to generate a new updated `Anki Helper.app` file, you can easily rebuild it using PyInstaller:
+
+1.  **Activate the environment**:
+    ```bash
+    source .venv/bin/activate
+    ```
+2.  **Run the build command**:
+    ```bash
+    pyinstaller "Anki Helper.spec" --clean
+    ```
+3.  The new `Anki Helper.app` will be created inside the `dist/` folder, replacing the old one.
+
+---
+
 ## 🧪 Testing
 
 This project uses `pytest` for unit testing. To run the tests correctly within the environment:

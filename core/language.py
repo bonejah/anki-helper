@@ -18,9 +18,41 @@ TRANSLATION_MAP = {
     "pt": [("en", "English"), ("fr", "French")]
 }
 
+FRENCH_PREFIXES = [
+    "le ", "la ", "les ", "un ", "une ", "des ", 
+    "mon ", "ma ", "mes ", "ton ", "ta ", "tes ", 
+    "son ", "sa ", "ses ", "notre ", "votre ", "leur ",
+    "ce ", "cet ", "cette ", "ces ",
+    "je ", "tu ", "il ", "elle ", "on ", "nous ", "vous ", "ils ", "elles ",
+    "au ", "aux ", "du ", "des ",
+    "cher ", "chère ", "petit ", "petite ", "grand ", "grande "
+]
+
+FRENCH_EXACT_WORDS = {
+    "le", "la", "les", "un", "une", "des",
+    "mon", "ma", "mes", "ton", "ta", "tes",
+    "son", "sa", "ses",
+    "cher", "chère", "chere",
+    "historie", "histoire", "frère", "frere", "oncle", "tante",
+    "thailande", "france", "paris", "lyon"
+}
+
 def detect_language_safely(text: str) -> str:
     if not text:
         return None
+        
+    normalized_lower = text.lower().strip()
+    
+    # 1. Heuristic: Match specific French words or common prefixes
+    if normalized_lower in FRENCH_EXACT_WORDS:
+        print(f"Heuristic detection (exact): {normalized_lower} -> fr")
+        return "fr"
+        
+    for prefix in FRENCH_PREFIXES:
+        if normalized_lower.startswith(prefix):
+            print(f"Heuristic detection (prefix): {prefix} -> fr")
+            return "fr"
+
     try:
         langs = detect_langs(text)
         print('detected languages: ' + str(langs))
