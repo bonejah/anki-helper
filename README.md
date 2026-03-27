@@ -34,9 +34,25 @@ Use this if you want to modify the code or see debug logs.
 1.  **Install dependencies**: `pip install -r requirements.txt`
 2.  **Run the server**:
     ```bash
+    source .venv/bin/activate
     python app.py
     ```
 3.  Access the app at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+## Testing
+
+This project uses `pytest` for unit testing. To run the tests:
+
+1.  **Install test dependencies**:
+    ```bash
+    pip install pytest pytest-mock
+    ```
+2.  **Run all tests**:
+    ```bash
+    pytest
+    ```
+    
+The tests use mocks for external services (Anki, Google Translate, Collins Dictionary), so they can be run offline without actual AnkiConnect or internet connectivity.
 
 ---
 
