@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="{{ current_ui_lang }}">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ _('Translator and Anki Helper') }}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-box">
+      <div class="spinner-wrapper">
+        <div class="spinner"></div>
+        <div class="spinner-inner"></div>
+      </div>
+      <p>{{ _('Translating and saving to Anki...') }}</p>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="ui-language-switcher">
+      <a href="{{ url_for('set_language', lang_code='pt') }}"
+        class="ui-lang-link {% if current_ui_lang == 'pt' %}active{% endif %}" aria-label="Português">
+        <span class="flag">🇧🇷</span>
+        <span class="lang-label">Português</span>
+      </a>
+
+      <a href="{{ url_for('set_language', lang_code='en') }}"
+        class="ui-lang-link {% if current_ui_lang == 'en' %}active{% endif %}" aria-label="English">
+        <span class="flag">🇺🇸</span>
+        <span class="lang-label">English</span>
+      </a>
+
+      <a href="{{ url_for('set_language', lang_code='fr') }}"
+        class="ui-lang-link {% if current_ui_lang == 'fr' %}active{% endif %}" aria-label="Français">
+        <span class="flag">🇫🇷</span>
+        <span class="lang-label">Français</span>
+      </a>
+    </div>
+
+    {% if not anki_online %}
+    <div class="setup-banner animate-slide-up">
+      <div class="setup-icon">💡</div>
+      <div class="setup-text">
+        <strong>{{ _('Requirement:') }}</strong> {{ _('Anki must be open with the') }} <a href="https://ankiweb.net/shared/info/2055492159" target="_blank">AnkiConnect</a> {{ _('plugin installed for cards to be saved.') }}
+      </div>
+    </div>
+    {% else %}
+    <div class="setup-banner success animate-slide-up" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.15);">
+      <div class="setup-icon">✅</div>
+      <div class="setup-text" style="color: #065f46;">
+        <strong>{{ _('Connected:') }}</strong> {{ _('Anki is running and ready!') }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if translation_data.saved_message %}
+    <div class="status-message success">
+      <span>✅</span> {{ translation_data.saved_message }}
+    </div>
+    {% endif %}
+
+    {% if translation_data.error_message %}
+    <div class="status-message error">
+      <span>❌</span> {{ translation_data.error_message }}
+    </div>
+    {% endif %}
+
+    <header class="hero">
+      <div class="hero-card">
+        <span class="eyebrow">🌍 {{ _('Trilingual translator 🇧🇷 🇺🇸 🇫🇷 + Anki') }}</span>
+        <h1>{{ _('Turn words into learning') }}</h1>
+        <p class="subtitle">
+          {{ _('Translate words and expressions between French, English and Portuguese, save them to Anki and review
+          later.') }}
+        </p>
+      </div>
+    </header>
+
+    <section class="content-grid">
+      <div class="left-column">
+        <aside class="side-card">
+          <h2>{{ _('Supported languages') }}</h2>
+          <ul class="tips">
+            <li>{{ _('French → English + Portuguese') }}</li>
+            <li>{{ _('English → French + Portuguese') }}</li>
+            <li>{{ _('Portuguese → English + French') }}</li>
+          </ul>
+        </aside>
+
+        <div class="panel">
+          <h2>{{ _('Create deck') }}</h2>
+          <p class="panel-description">
+            {{ _('Create custom decks to organize your cards.') }}
+          </p>
+
+          <form method="POST" action="/create_deck">
+            <div class="field">
+              <label for="new_deck">{{ _('Deck name') }}</label>
+              <input id="new_deck" type="text" name="new_deck" placeholder="{{ _('Example: French::Travel') }}" />
+            </div>
+
+            <button type="submit" class="btn-success">
+              <span>➕</span> {{ _('Create deck') }}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="right-column">
+        <div class="panel">
+          <h2>{{ _('Translate') }}</h2>
+          <p class="panel-description">
+            {{ _('Choose a deck manually or use Auto Detect.') }}
+          </p>
+
+          <form method="POST" id="translateForm">
+            <div class="field">
+              <label for="deck">{{ _('Deck') }}</label>
+              <select id="deck" name="deck">
+                {% for deck in decks %}
+                <option value="{{ deck }}" {% if deck==selected_deck %}selected{% endif %}>
+                  {{ deck }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="text">{{ _('Text') }}</label>
+              <textarea id="text" name="text" required
+                placeholder="{{ _('Type a word, expression or sentence in French, English or Portuguese...') }}">{{ original_text }}</textarea>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn-primary">
+                <span>✨</span> {{ _('Translate') }}
+              </button>
+              <button type="button" class="btn-secondary" onclick="clearAll()">
+                <span>🧹</span> {{ _('Clear') }}
+              </button>
+            </div>
+
+            <p class="helper-text">
+              {{ _('This app only works with French, English and Portuguese.') }}
+            </p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    {% if translation_data and (translation_data.translations or translation_data.explanation_data or
+    translation_data.detected_language) %}
+    <section class="result-wrapper animate-slide-up">
+      <h2 class="result-title">🚀 {{ _('Result') }}</h2>
+
+      <div class="meta-info animate-slide-up delay-1">
+        {% if translation_data.detected_language %}
+        <div class="meta-badge">
+          <span class="meta-label">{{ _('Detected language') }}</span>
+          <br>
+          <span class="meta-value">{{ translation_data.detected_language }}</span>
+        </div>
+        {% endif %}
+
+        {% if selected_deck and selected_deck != "Auto Detect" %}
+        <div class="meta-badge">
+          <span class="meta-label">{{ _('Deck used') }}</span>
+          <br>
+          <span class="meta-value">{{ selected_deck }}</span>
+        </div>
+        {% endif %}
+
+        {% if translation_data.has_audio %}
+        <div class="meta-badge" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);">
+          <span class="meta-label" style="color: #3b82f6;">🔊 {{ _('Audio') }}</span>
+          <br>
+          <span class="meta-value" style="color: #1d4ed8;">{{ _('Generated') }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if translation_data.translations %}
+      <div class="result-grid animate-slide-up delay-2">
+        {% for item in translation_data.translations %}
+        <div class="result-card">
+          <h3>{{ item.label }}</h3>
+          <p>{{ item.text }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="explanation animate-slide-up delay-3">
+        <h3>📖 {{ _('Explanation and examples') }}</h3>
+
+        {% if translation_data.explanation_data %}
+          
+          {% if translation_data.explanation_data.definitions %}
+          <div class="definition-list">
+            {% for item in translation_data.explanation_data.definitions %}
+            <div class="definition-item">
+              <div class="definition-header">
+                {% if item.number %}
+                <span class="definition-number">{{ item.number }}</span>
+                {% endif %}
+                <span class="definition-text">{{ item.text }}</span>
+              </div>
+
+              {% if item.examples %}
+              <div class="definition-subblock">
+                <span class="sub-label">🔹 {{ _('Examples') }}</span>
+                <ul>
+                  {% for ex in item.examples %}
+                  <li>{{ ex }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+
+              {% if item.synonyms %}
+              <div class="definition-subblock">
+                <span class="sub-label">🔹 {{ _('Synonyms') }}</span>
+                <p>{{ item.synonyms | join(', ') }}</p>
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if translation_data.explanation_data.locutions %}
+          <div class="locutions-block">
+            <h4>💡 {{ _('Expressions / Locutions') }}</h4>
+            {% for loc in translation_data.explanation_data.locutions %}
+            <div class="locution-item">
+              <strong>{{ loc.title }}</strong>
+              <p>{{ loc.text }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if translation_data.explanation_data.corpus_examples %}
+          <div class="locutions-block">
+            <h4>📚 {{ _('Example Phrases') }}</h4>
+            {% for ex in translation_data.explanation_data.corpus_examples %}
+            <div class="locution-item" style="font-style: italic; color: #4b5563; background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 12px; margin-bottom: 8px;">
+              "{{ ex }}"
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if not translation_data.explanation_data.definitions and not translation_data.explanation_data.corpus_examples and translation_data.explanation_data.fallback_text %}
+          <div class="empty-state">
+            <p>{{ translation_data.explanation_data.fallback_text }}</p>
+          </div>
+          {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+          <p>{{ _('Definition not found.') }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+    {% else %}
+    <section class="result-wrapper">
+      <div class="empty-state" id="emptyState">
+        <p>✨ {{ _('There is no translation yet. Type some text to get started.') }}</p>
+      </div>
+    </section>
+    {% endif %}
+
+    <footer class="footer">
+      <div class="footer-content">
+        <p>&copy; 2026 Anki Helper. v{{ app_version }}</p>
+        <p class="footer-tagline">{{ _('Made with ❤️ for language learners.') }}</p>
+      </div>
+    </footer>
+  </main>
+
+  <button id="scrollTopBtn" aria-label="{{ _('Back to top') }}">↑</button>
+
+  <script>
+    function clearAll() {
+      const textArea = document.getElementById('text');
+      if (textArea) textArea.value = '';
+
+      const deckSelect = document.getElementById('deck');
+      if (deckSelect) deckSelect.value = 'Auto Detect';
+      
+      const resultWrapper = document.querySelector('.result-wrapper');
+      if (resultWrapper) {
+        resultWrapper.innerHTML = `
+          <div class="empty-state" id="emptyState">
+            <p>✨ {{ _('There is no translation yet. Type some text to get started.') }}</p>
+          </div>
+        `;
+      }
+      
+      document.querySelectorAll('.status-message').forEach(el => el.remove());
+    }
+
+    function showLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) overlay.classList.remove('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('translateForm');
+      const scrollBtn = document.getElementById('scrollTopBtn');
+
+      if (form) {
+        form.addEventListener('submit', function () {
+          showLoading();
+          const submitButton = form.querySelector('.btn-primary');
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = "<span>⏳</span> {{ _('Translating...') }}";
+          }
+        });
+      }
+
+      if (scrollBtn) {
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 250) scrollBtn.classList.add('show');
+          else scrollBtn.classList.remove('show');
+        });
+
+        scrollBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      setTimeout(() => {
+        document.querySelectorAll('.status-message, .setup-banner.success').forEach(alert => {
+          alert.style.transition = 'all 0.5s ease';
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateY(-10px)';
+          setTimeout(() => alert.remove(), 500);
+        });
+      }, 5000);
+    });
+  </script>
+</body>
+
+</html>
