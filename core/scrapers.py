@@ -3,6 +3,12 @@ import requests
 import cloudscraper
 from urllib.parse import quote
 from bs4 import BeautifulSoup
+import tempfile
+import os
+
+def get_temp_audio_path(filename):
+    """Returns an absolute path in the system temp directory."""
+    return os.path.join(tempfile.gettempdir(), filename)
 
 def normalize_text(text: str) -> str:
     return (text or "").strip()
@@ -61,15 +67,17 @@ def fetch_collins_info(word: str, src_lang: str):
                     audio_url = "https://www.collinsdictionary.com" + audio_url
                     
                 audio_filename = f"collins_{src_lang}_{word.replace(' ', '_')}.mp3"
+                temp_path = get_temp_audio_path(audio_filename)
                 try:
                     audio_res = scraper.get(
                         audio_url,
                         timeout=5,
                     )
                     if audio_res.status_code == 200:
-                        with open(audio_filename, "wb") as f:
+                        with open(temp_path, "wb") as f:
                             f.write(audio_res.content)
-                        print(f"Áudio Collins salvo: {audio_filename}")
+                        print(f"Áudio Collins salvo em: {temp_path}")
+                        audio_filename = temp_path # Return the absolute path
                     else:
                         print(f"Erro ao baixar áudio Collins (status {audio_res.status_code}): {audio_url}")
                         audio_filename = None
@@ -158,11 +166,13 @@ def parse_larousse_with_audio(word, max_definitions=4, max_locutions=4):
         if audio_tag and audio_tag.get("src"):
             audio_url = "https://www.larousse.fr" + audio_tag["src"]
             audio_filename = f"larousse_{word}.mp3"
+            temp_path = get_temp_audio_path(audio_filename)
 
             audio_response = requests.get(audio_url, timeout=8)
             if audio_response.status_code == 200:
-                with open(audio_filename, "wb") as f:
+                with open(temp_path, "wb") as f:
                     f.write(audio_response.content)
+                audio_filename = temp_path # Return the absolute path
             else:
                 audio_filename = None
 

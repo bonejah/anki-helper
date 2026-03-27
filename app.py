@@ -1,4 +1,5 @@
 import os
+import sys
 from flask import Flask, render_template, request, redirect, session, url_for
 from flask_babel import Babel, gettext as _
 
@@ -19,7 +20,20 @@ from core.scrapers import normalize_text, fetch_collins_info
 from core.formatter import build_explanation_html_for_anki
 from core.audio import generate_tts_audio
 
-app = Flask(__name__)
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+app = Flask(
+    __name__,
+    template_folder=get_resource_path("templates"),
+    static_folder=get_resource_path("static")
+)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-in-production")
 APP_VERSION = "1.2.0"
 
@@ -183,6 +197,7 @@ def _handle_translation_post(decks):
             "translations": translations,
             "detected_language": SUPPORTED_LANGS[detected_lang]["label"],
             "explanation_data": explanation_data,
+            "has_audio": bool(audio_file_safe),
         }
 
         if deck_ok:

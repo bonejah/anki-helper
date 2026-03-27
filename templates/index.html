@@ -173,6 +173,14 @@
           <span class="meta-value">{{ selected_deck }}</span>
         </div>
         {% endif %}
+
+        {% if translation_data.has_audio %}
+        <div class="meta-badge" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);">
+          <span class="meta-label" style="color: #3b82f6;">🔊 {{ _('Audio') }}</span>
+          <br>
+          <span class="meta-value" style="color: #1d4ed8;">{{ _('Generated') }}</span>
+        </div>
+        {% endif %}
       </div>
 
       {% if translation_data.translations %}
