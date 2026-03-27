@@ -19,18 +19,40 @@
 
 ---
 
-## 🚀 Getting Started
+## 🚀 How to Run the App
 
-### 1. The Easy Way (macOS)
-1. Ensure **Anki** is open with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159) plugin installed.
-2. Download the latest version from the `dist/` folder.
-3. Open **`Anki Helper.app`**.
-4. Your browser will open automatically at `http://127.0.0.1:5000`.
+There are two ways to use **Anki Helper**, depending on your profile:
 
-### 2. Developer Mode (Manual)
-1. **Clone the repo**: `git clone https://github.com/bonejah/anki-helper.git`
-2. **Install deps**: `pip install -r requirements.txt`
-3. **Run**: `python app.py`
+### 1. 🍎 Standalone Mode (Recommended for Users)
+This is the easiest way to use the app without touching the terminal.
+1.  Open the `dist/` folder in this repository.
+2.  Double-click **`Anki Helper.app`**.
+3.  The app will launch a background server and automatically open your browser at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+### 2. 🛠️ Developer Mode (CLI)
+Use this if you want to modify the code or see debug logs.
+1.  **Install dependencies**: `pip install -r requirements.txt`
+2.  **Run the server**:
+    ```bash
+    python app.py
+    ```
+3.  Access the app at [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+---
+
+## 🔩 Troubleshooting
+
+### ⚠️ "Address already in use" (Port 5000)
+On **macOS Monterey or newer**, the "AirPlay Receiver" service uses port 5000 by default. If you see this error when running the app:
+
+**Solution A (Disable AirPlay Receiver):**
+1.  Go to **System Settings** > **General** > **AirDrop & Handoff**.
+2.  Turn off **AirPlay Receiver**.
+
+**Solution B (Run on a different port):**
+```bash
+PORT=5001 python app.py
+```
 
 ---
 
