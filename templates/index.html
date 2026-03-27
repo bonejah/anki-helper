@@ -41,6 +41,22 @@
       </a>
     </div>
 
+    {% if not anki_online %}
+    <div class="setup-banner animate-slide-up">
+      <div class="setup-icon">💡</div>
+      <div class="setup-text">
+        <strong>{{ _('Requirement:') }}</strong> {{ _('Anki must be open with the') }} <a href="https://ankiweb.net/shared/info/2055492159" target="_blank">AnkiConnect</a> {{ _('plugin installed for cards to be saved.') }}
+      </div>
+    </div>
+    {% else %}
+    <div class="setup-banner success animate-slide-up" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.15);">
+      <div class="setup-icon">✅</div>
+      <div class="setup-text" style="color: #065f46;">
+        <strong>{{ _('Connected:') }}</strong> {{ _('Anki is running and ready!') }}
+      </div>
+    </div>
+    {% endif %}
+
     {% if translation_data.saved_message %}
     <div class="status-message success">
       <span>✅</span> {{ translation_data.saved_message }}
@@ -314,7 +330,7 @@
       }
 
       setTimeout(() => {
-        document.querySelectorAll('.status-message').forEach(alert => {
+        document.querySelectorAll('.status-message, .setup-banner.success').forEach(alert => {
           alert.style.transition = 'all 0.5s ease';
           alert.style.opacity = '0';
           alert.style.transform = 'translateY(-10px)';

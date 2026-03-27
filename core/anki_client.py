@@ -4,6 +4,14 @@ import requests
 
 ANKI_CONNECT_URL = "http://localhost:8765"
 
+def check_anki_status():
+    """Checks if AnkiConnect is reachable."""
+    try:
+        requests.post(ANKI_CONNECT_URL, json={"action": "version", "version": 6}, timeout=1)
+        return True
+    except:
+        return False
+
 def invoke_anki(action, params=None):
     payload = {
         "action": action,

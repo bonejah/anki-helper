@@ -3,19 +3,21 @@ from flask import Flask, render_template, request, redirect, session, url_for
 from flask_babel import Babel, gettext as _
 
 from core.anki_client import (
-    get_anki_decks, 
-    ensure_deck_exists, 
-    send_audio_to_anki, 
-    invoke_anki, 
-    note_exists_in_deck
+    get_anki_decks,
+    ensure_deck_exists,
+    send_audio_to_anki,
+    invoke_anki,
+    note_exists_in_deck,
+    check_anki_status
 )
 from core.language import (
-    SUPPORTED_LANGS, 
     detect_language_safely, 
-    translate_text
+    translate_text,
+    SUPPORTED_LANGS
 )
 from core.scrapers import normalize_text, fetch_collins_info
 from core.formatter import build_explanation_html_for_anki
+from core.audio import generate_tts_audio
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-in-production")
@@ -45,6 +47,7 @@ def inject_globals():
         "ui_languages": LANGUAGES,
         "current_ui_lang": get_locale(),
         "app_version": APP_VERSION,
+        "anki_online": check_anki_status()
     }
 
 # ===============================
@@ -163,6 +166,11 @@ def _handle_translation_post(decks):
     explanation_data = get_explanation_data(text, detected_lang)
     
     audio_file = explanation_data.get("audio_filename")
+    
+    # NEW: Fallback to gTTS if no Collins audio is found (common for sentences)
+    if not audio_file:
+        audio_file = generate_tts_audio(text, detected_lang)
+
     audio_file_safe = send_audio_to_anki(audio_file)
     audio_tag_for_anki = f"[sound:{audio_file_safe}]" if audio_file_safe else ""
 
