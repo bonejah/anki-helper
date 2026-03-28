@@ -644,7 +644,7 @@ button {
 #scrollTopBtn {
   position: fixed;
   bottom: 40px;
-  right: 40px;
+  right: max(40px, calc(50vw - 560px));
   background: var(--primary);
   color: #fff;
   width: 56px;
