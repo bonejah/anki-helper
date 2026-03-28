@@ -175,10 +175,17 @@
         {% endif %}
 
         {% if translation_data.has_audio %}
-        <div class="meta-badge" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);">
-          <span class="meta-label" style="color: #3b82f6;">🔊 {{ _('Audio') }}</span>
-          <br>
-          <span class="meta-value" style="color: #1d4ed8;">{{ _('Generated') }}</span>
+        <div class="meta-badge" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 20px;">
+          <div>
+            <span class="meta-label" style="color: #3b82f6;">🔊 {{ _('Audio') }}</span>
+            <br>
+            <span class="meta-value" style="color: #1d4ed8;">{{ _('Generated') }}</span>
+          </div>
+          {% if translation_data.audio_base64 %}
+          <button type="button" onclick="new Audio('data:audio/mp3;base64,{{ translation_data.audio_base64 }}').play()" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" title="{{ _('Play audio') }}">
+            <span style="margin: 0;">▶️</span> <span style="margin-left: 4px;">{{ _('Listen') }}</span>
+          </button>
+          {% endif %}
         </div>
         {% endif %}
       </div>

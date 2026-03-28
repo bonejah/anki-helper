@@ -1,5 +1,6 @@
 import os
 import sys
+import base64
 from flask import Flask, render_template, request, redirect, session, url_for
 from flask_babel import Babel, gettext as _
 
@@ -185,6 +186,11 @@ def _handle_translation_post(decks):
     if not audio_file:
         audio_file = generate_tts_audio(text, detected_lang)
 
+    audio_base64 = None
+    if audio_file and os.path.exists(audio_file):
+        with open(audio_file, "rb") as f:
+            audio_base64 = base64.b64encode(f.read()).decode("utf-8")
+
     audio_file_safe = send_audio_to_anki(audio_file)
     audio_tag_for_anki = f"[sound:{audio_file_safe}]" if audio_file_safe else ""
 
@@ -197,7 +203,8 @@ def _handle_translation_post(decks):
             "translations": translations,
             "detected_language": SUPPORTED_LANGS[detected_lang]["label"],
             "explanation_data": explanation_data,
-            "has_audio": bool(audio_file_safe),
+            "has_audio": bool(audio_base64) or bool(audio_file_safe),
+            "audio_base64": audio_base64,
         }
 
         if deck_ok:
