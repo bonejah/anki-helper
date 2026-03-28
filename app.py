@@ -17,7 +17,7 @@ from core.language import (
     translate_text,
     SUPPORTED_LANGS
 )
-from core.scrapers import normalize_text, fetch_collins_info
+from core.scrapers import normalize_text, fetch_collins_info, parse_larousse_with_audio
 from core.formatter import build_explanation_html_for_anki
 from core.audio import generate_tts_audio
 
@@ -71,8 +71,21 @@ def inject_globals():
 
 def get_explanation_data(text, lang):
     info = fetch_collins_info(text, lang)
-    if info:
+    if info and info.get("definitions"):
         return info
+
+    # Fallback to Larousse for French
+    if lang == "fr":
+        print(f"Collins failed for '{text}', falling back to Larousse...")
+        larousse_info = parse_larousse_with_audio(text)
+        if larousse_info and larousse_info.get("definitions"):
+            return {
+                "definitions": larousse_info["definitions"],
+                "locutions": larousse_info.get("locutions", []),
+                "audio_filename": larousse_info.get("audio_filename"),
+                "short_translations": [], # Not provided by Larousse scraper currently
+                "corpus_examples": []
+            }
 
     return {
         "definitions": [],

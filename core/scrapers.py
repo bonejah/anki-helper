@@ -40,7 +40,13 @@ def fetch_collins_info(word: str, src_lang: str):
 
     try:
         url = url_map[src_lang]
-        scraper = cloudscraper.create_scraper()
+        scraper = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'darwin',
+                'desktop': True
+            }
+        )
         response = scraper.get(
             url,
             timeout=10,
@@ -51,6 +57,11 @@ def fetch_collins_info(word: str, src_lang: str):
 
         soup = BeautifulSoup(response.text, "html.parser")
         
+        # Check for Cloudflare challenge (even if 200, it might be a challenge page)
+        if "Just a moment..." in soup.title.string if soup.title else False:
+            print("Collins Cloudflare challenge detected.")
+            return None
+
         # Audio extraction
         audio_filename = None
         audio_tag = soup.find("a", class_="hwd_sound")
