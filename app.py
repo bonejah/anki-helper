@@ -36,7 +36,7 @@ app = Flask(
     static_folder=get_resource_path("static")
 )
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key-in-production")
-APP_VERSION = "1.2.3"
+APP_VERSION = "1.2.4"
 
 # ===============================
 # I18N

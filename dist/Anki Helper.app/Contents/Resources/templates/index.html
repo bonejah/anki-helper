@@ -352,6 +352,16 @@
           setTimeout(() => alert.remove(), 500);
         });
       }, 5000);
+
+      {% if translation_data and (translation_data.translations or translation_data.explanation_data or translation_data.detected_language) %}
+      // Automatically scroll to the result section
+      setTimeout(() => {
+        const resultSection = document.querySelector('.result-wrapper');
+        if (resultSection) {
+          resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
+      {% endif %}
     });
   </script>
 </body>
