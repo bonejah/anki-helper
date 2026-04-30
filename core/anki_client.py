@@ -98,3 +98,15 @@ def send_audio_to_anki(filename):
     except Exception as e:
         print("Erro ao enviar áudio para Anki:", e)
         return None
+
+def delete_notes(note_ids):
+    """Deletes notes from Anki by their IDs."""
+    try:
+        result = invoke_anki("deleteNotes", {"notes": note_ids})
+        if result.get("error"):
+            print("Erro ao deletar notas:", result["error"])
+            return False
+        return True
+    except Exception as e:
+        print("Erro ao deletar notas:", e)
+        return False

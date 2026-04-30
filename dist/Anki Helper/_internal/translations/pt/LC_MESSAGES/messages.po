@@ -178,6 +178,27 @@ msgstr ""
 msgid "Translating..."
 msgstr "Traduzindo..."
 
+msgid "Card deleted successfully."
+msgstr "Card excluído com sucesso."
+
+msgid "Error deleting card."
+msgstr "Erro ao excluir o card."
+
+msgid "Delete Card"
+msgstr "Excluir Card"
+
+msgid "Are you sure you want to delete this card from Anki?"
+msgstr "Tem certeza que deseja excluir este card do Anki?"
+
+msgid "Management"
+msgstr "Gerenciamento"
+
+msgid "In Anki"
+msgstr "No Anki"
+
+msgid "Deleting..."
+msgstr "Excluindo..."
+
 #~ msgid "Other languages are not supported at the moment"
 #~ msgstr "Outros idiomas não são suportados no momento"
 

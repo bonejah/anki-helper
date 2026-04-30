@@ -10,7 +10,8 @@ from core.anki_client import (
     send_audio_to_anki,
     invoke_anki,
     note_exists_in_deck,
-    check_anki_status
+    check_anki_status,
+    delete_notes
 )
 from core.language import (
     detect_language_safely, 
@@ -152,13 +153,14 @@ def create_anki_card(
     }
 
     if note_exists_in_deck(text, deck_name):
-        return False, _("This card already exists in the %(deck)s deck.", deck=deck_name)
+        return False, _("This card already exists in the %(deck)s deck.", deck=deck_name), None
 
     result = invoke_anki("addNote", payload)
     if result.get("error"):
-        return False, _("Error creating card: %(error)s", error=result["error"])
+        return False, _("Error creating card: %(error)s", error=result["error"]), None
 
-    return True, _("Card created successfully in the %(deck)s deck.", deck=deck_name)
+    note_id = result.get("result")
+    return True, _("Card created successfully in the %(deck)s deck.", deck=deck_name), note_id
 
 # ===============================
 # ROUTES
@@ -221,7 +223,7 @@ def _handle_translation_post(decks):
         }
 
         if deck_ok:
-            success, message = create_anki_card(
+            success, message, note_id = create_anki_card(
                 text=text,
                 translation_data=translation_data,
                 deck_name=selected_deck,
@@ -231,6 +233,7 @@ def _handle_translation_post(decks):
             )
             if success:
                 translation_data["saved_message"] = message
+                translation_data["note_id"] = note_id
             else:
                 translation_data["error_message"] = message
         else:
@@ -264,13 +267,20 @@ def home():
         original_text="",
         selected_deck="Auto Detect",
     )
-
 @app.route("/create_deck", methods=["POST"])
 def create_deck():
     deck_name = request.form.get("new_deck", "").strip()
     if deck_name:
         ensure_deck_exists(deck_name)
     return redirect(url_for("home"))
+
+@app.route("/delete_note/<int:note_id>", methods=["POST"])
+def delete_note(note_id):
+    success = delete_notes([note_id])
+    if success:
+        return {"status": "success", "message": _("Card deleted successfully.")}
+    else:
+        return {"status": "error", "message": _("Error deleting card.")}, 500
 
 if __name__ == "__main__":
     app.run(debug=True, port=int(os.environ.get("PORT", 5001)))
