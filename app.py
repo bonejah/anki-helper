@@ -234,6 +234,9 @@ def _handle_translation_post(decks):
             if success:
                 translation_data["saved_message"] = message
                 translation_data["note_id"] = note_id
+                # Persist note_id in session for later requests
+                session["last_note_id"] = note_id
+                print("DEBUG: note_id stored in session:", note_id)
             else:
                 translation_data["error_message"] = message
         else:
@@ -262,7 +265,9 @@ def home():
 
     return render_template(
         "index.html",
-        translation_data={},
+        translation_data={
+            "note_id": session.get("last_note_id")
+        } if session.get("last_note_id") else {},
         decks=decks,
         original_text="",
         selected_deck="Auto Detect",
@@ -278,6 +283,8 @@ def create_deck():
 def delete_note(note_id):
     success = delete_notes([note_id])
     if success:
+        # Clear stored note_id since the card was deleted
+        session.pop('last_note_id', None)
         return {"status": "success", "message": _("Card deleted successfully.")}
     else:
         return {"status": "error", "message": _("Error deleting card.")}, 500
